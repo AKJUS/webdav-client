@@ -8,24 +8,19 @@ export default defineConfig({
                 test: {
                     name: "node-unit",
                     environment: "node",
-                    include: [
-                        "test/node/**/*.spec.ts"
-                    ]
+                    include: ["test/node/**/*.spec.ts"]
                 }
             },
             {
                 test: {
                     name: "browser",
-                    include: [
-                        "test/web/**/*.spec.ts"
-                    ],
+                    include: ["test/web/**/*.spec.ts"],
+                    setupFiles: ["test/web/setup.ts"],
                     browser: {
                         provider: "playwright",
                         enabled: true,
                         headless: true,
-                        instances: [
-                            { browser: "chromium" }
-                        ],
+                        instances: [{ browser: "chromium" }],
                         screenshotFailures: false
                     }
                 },
@@ -34,5 +29,5 @@ export default defineConfig({
                 }
             }
         ]
-    },
+    }
 });

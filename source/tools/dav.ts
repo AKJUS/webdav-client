@@ -21,6 +21,15 @@ enum PropertyType {
     Original = "original"
 }
 
+function toJPathString(
+    jPath: string | { toString: (sep?: string, includeNS?: boolean) => string }
+): string {
+    if (typeof jPath === "string") {
+        return jPath;
+    }
+    return jPath.toString(".", false);
+}
+
 function getParser({
     attributeNamePrefix,
     attributeParsers,
@@ -32,14 +41,16 @@ function getParser({
         textNodeName: "text",
         ignoreAttributes: false,
         removeNSPrefix: true,
+        jPath: false,
         numberParseOptions: {
             hex: true,
             leadingZeros: false
         },
         attributeValueProcessor(_, attrValue, jPath) {
+            const pathStr = toJPathString(jPath);
             for (const processor of attributeParsers) {
                 try {
-                    const value = processor(jPath, attrValue);
+                    const value = processor(pathStr, attrValue);
                     if (value !== attrValue) {
                         return value;
                     }
@@ -50,9 +61,10 @@ function getParser({
             return attrValue;
         },
         tagValueProcessor(tagName, tagValue, jPath) {
+            const pathStr = toJPathString(jPath);
             for (const processor of tagParsers) {
                 try {
-                    const value = processor(jPath, tagValue);
+                    const value = processor(pathStr, tagValue);
                     if (value !== tagValue) {
                         return value;
                     }

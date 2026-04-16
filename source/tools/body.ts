@@ -12,7 +12,7 @@ export function requestDataToFetchBody(data: RequestDataPayload): [BodyInit, Hea
     if (typeof data === "string") {
         return [data, {}];
     } else if (isBuffer(data)) {
-        return [data as Buffer, {}];
+        return [data as BodyInit, {}];
     } else if (isArrayBuffer(data)) {
         return [data as ArrayBuffer, {}];
     } else if (data && typeof data === "object") {

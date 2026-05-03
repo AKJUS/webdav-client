@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { readFile } from "fs/promises";
-import { parseXML } from "../../../source/index.js";
+import { parseXML, type WebDAVEntityDecoderOptions } from "../../../source/index.js";
 
 describe("parseXML", function () {
     it("keeps numeric-looking displaynames", async function () {
@@ -148,5 +148,87 @@ describe("parseXML", function () {
                 value: false
             }
         ]);
+    });
+
+    describe("entityDecoder", function () {
+        it("parses XML with entities when entityDecoder is not set", async function () {
+            const xml = `<?xml version="1.0"?>
+<d:multistatus xmlns:d="DAV:">
+    <d:response>
+        <d:href>/file.txt</d:href>
+        <d:propstat>
+            <d:prop>
+                <displayname>A &amp; B &lt; C</displayname>
+            </d:prop>
+            <d:status>HTTP/1.1 200 OK</d:status>
+        </d:propstat>
+    </d:response>
+</d:multistatus>`;
+
+            const parsed = await parseXML(xml);
+            expect(parsed.multistatus.response).to.have.length(1);
+            expect(parsed.multistatus.response[0].propstat.prop.displayname).to.equal("A & B < C");
+        });
+
+        it("parses XML with entities when entityDecoder limit is set", async function () {
+            const decoderOptions: WebDAVEntityDecoderOptions = {
+                limit: {
+                    maxTotalExpansions: 0,
+                    maxExpandedLength: 0
+                }
+            };
+
+            const xml = `<?xml version="1.0"?>
+<d:multistatus xmlns:d="DAV:">
+    <d:response>
+        <d:href>/file.txt</d:href>
+        <d:propstat>
+            <d:prop>
+                <displayname>A &amp; B &lt; C</displayname>
+            </d:prop>
+            <d:status>HTTP/1.1 200 OK</d:status>
+        </d:propstat>
+    </d:response>
+</d:multistatus>`;
+
+            const parsed = await parseXML(xml, {
+                attributeNamePrefix: "@",
+                attributeParsers: [],
+                entityDecoder: decoderOptions,
+                tagParsers: []
+            });
+            expect(parsed.multistatus.response).to.have.length(1);
+            expect(parsed.multistatus.response[0].propstat.prop.displayname).to.equal("A & B < C");
+        });
+
+        it("applies maxTotalExpansions limit when set", async function () {
+            const decoderOptions: WebDAVEntityDecoderOptions = {
+                limit: {
+                    maxTotalExpansions: 1
+                }
+            };
+
+            const xml = `<?xml version="1.0"?>
+<d:multistatus xmlns:d="DAV:">
+    <d:response>
+        <d:href>/file.txt</d:href>
+        <d:propstat>
+            <d:prop>
+                <displayname>A &amp; B</displayname>
+            </d:prop>
+            <d:status>HTTP/1.1 200 OK</d:status>
+        </d:propstat>
+    </d:response>
+</d:multistatus>`;
+
+            const parsed = await parseXML(xml, {
+                attributeNamePrefix: "@",
+                attributeParsers: [],
+                entityDecoder: decoderOptions,
+                tagParsers: []
+            });
+            expect(parsed.multistatus.response).to.have.length(1);
+            expect(parsed.multistatus.response[0].propstat.prop.displayname).to.equal("A & B");
+        });
     });
 });

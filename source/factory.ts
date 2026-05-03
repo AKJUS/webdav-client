@@ -52,6 +52,7 @@ export function createClient(remoteURL: string, options: WebDAVClientOptions = {
         authType: authTypeRaw = null,
         remoteBasePath,
         contactHref = DEFAULT_CONTACT_HREF,
+        entityDecoder,
         ha1,
         headers = {},
         httpAgent,
@@ -77,6 +78,7 @@ export function createClient(remoteURL: string, options: WebDAVClientOptions = {
         parsing: {
             attributeNamePrefix: options.attributeNamePrefix ?? "@",
             attributeParsers: [],
+            entityDecoder,
             tagParsers: [displaynameTagParser]
         },
         remotePath: extractURLPath(remoteURL),

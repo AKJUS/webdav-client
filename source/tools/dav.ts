@@ -1,5 +1,7 @@
 import path from "path-posix";
 import { XMLParser } from "fast-xml-parser";
+// @ts-expect-error Types declare default export but runtime provides named export
+import { EntityDecoder } from "@nodable/entities";
 import nestedProp from "nested-property";
 import { encodePath, normalisePath } from "./path.js";
 import type {
@@ -33,9 +35,10 @@ function toJPathString(
 function getParser({
     attributeNamePrefix,
     attributeParsers,
+    entityDecoder: entityDecoderOptions,
     tagParsers
 }: WebDAVParsingContext): XMLParser {
-    return new XMLParser({
+    const parserOptions: Record<string, unknown> = {
         allowBooleanAttributes: true,
         attributeNamePrefix,
         textNodeName: "text",
@@ -55,7 +58,7 @@ function getParser({
                         return value;
                     }
                 } catch (error) {
-                    // skipping this invalid parser
+                    // skipping this invalid processor
                 }
             }
             return attrValue;
@@ -69,12 +72,21 @@ function getParser({
                         return value;
                     }
                 } catch (error) {
-                    // skipping this invalid parser
+                    // skipping this invalid processor
                 }
             }
             return tagValue;
         }
-    });
+    };
+    if (entityDecoderOptions) {
+        parserOptions.entityDecoder = new EntityDecoder({
+            limit: {
+                maxTotalExpansions: entityDecoderOptions.limit?.maxTotalExpansions ?? 0,
+                maxExpandedLength: entityDecoderOptions.limit?.maxExpandedLength ?? 0
+            }
+        });
+    }
+    return new XMLParser(parserOptions);
 }
 
 /**

@@ -360,6 +360,7 @@ export interface WebDAVClientOptions {
     authType?: AuthType;
     remoteBasePath?: string;
     contactHref?: string;
+    entityDecoder?: WebDAVEntityDecoderOptions;
     ha1?: string;
     headers?: Headers;
     httpAgent?: any;
@@ -397,8 +398,16 @@ export type WebDAVAttributeParser = (
  */
 export type WebDAVTagParser = (jPath: string, tagValue: string) => string | unknown | undefined;
 
+export interface WebDAVEntityDecoderOptions {
+    limit?: {
+        maxTotalExpansions?: number;
+        maxExpandedLength?: number;
+    };
+}
+
 export interface WebDAVParsingContext {
     attributeNamePrefix?: string;
     attributeParsers: WebDAVAttributeParser[];
+    entityDecoder?: WebDAVEntityDecoderOptions;
     tagParsers: WebDAVTagParser[];
 }
